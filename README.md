@@ -19,9 +19,9 @@ tail -n 5 secondfile.txt
 
 awk 'NR>=2 && NR<=6' secondfile.txt
 
-nano firstfile.txt
-nano secondfile.txt
+vi firstfile.txt
+vi secondfile.txt
 
 ps aux
-ps aux | grep nano
+ps aux | grep vi
 kill <PID>
