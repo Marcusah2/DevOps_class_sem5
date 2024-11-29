@@ -51,6 +51,10 @@ pipeline {
                         # Move the terraform binary to /usr/local/bin/ if needed
                         sudo mv terraform /usr/local/bin/
                         '''
+
+                        // Ensure terraform is available on the system path
+                        echo "Adding Terraform to PATH..."
+                        sh 'export PATH=$PATH:/usr/local/bin'
                     } else {
                         echo "Terraform is already installed."
                     }
@@ -61,6 +65,10 @@ pipeline {
         stage('Terraform Init') {
             steps {
                 script {
+                    // Ensure the terraform binary is accessible
+                    echo "Verifying Terraform installation..."
+                    sh "terraform --version" // This will confirm terraform is available in the PATH
+
                     // Initialize Terraform working directory
                     echo "Running terraform init..."
                     try {
