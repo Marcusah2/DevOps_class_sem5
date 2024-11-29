@@ -5,7 +5,7 @@ pipeline {
         TF_VERSION = "1.5.3"                 // Desired Terraform version
         AWS_REGION = "us-east-1"            // AWS Region
         GITHUB_REPO = "https://github.com/Marcusah2/DevOps_class_sem5.git" // GitHub repo URL
-        AWS_CREDENTIALS_ID = "aws-credentials-id" // Replace with the ID of the AWS credentials in Jenkins
+        AWS_CREDENTIALS_ID = "626d9eb5-4341-4198-a1d5-b0ff128cb272" // Replace with the ID of the AWS credentials in Jenkins
     }
 
     stages {
