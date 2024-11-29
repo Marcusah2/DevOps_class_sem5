@@ -4,18 +4,30 @@ pipeline {
     environment {
         TF_VERSION = "1.5.3"  // Set the desired Terraform version
         AWS_REGION = "us-east-1"  // Specify your region (change as needed)
-        TERRAFORM_DIR = "${WORKSPACE}/DevOps_class_sem5"  // Path where the GitHub repository will be cloned
         GITHUB_REPO = "https://github.com/Marcusah2/DevOps_class_sem5.git"  // GitHub repository URL
+        TERRAFORM_DIR = "${WORKSPACE}/DevOps_class_sem5"  // Path where the GitHub repository will be cloned
     }
 
     stages {
         stage('Checkout Terraform Code from GitHub') {
             steps {
                 script {
-                    // Clone the Terraform code from GitHub repository
                     echo "Cloning Terraform code from GitHub repository..."
-                    git url: "${GITHUB_REPO}", branch: 'main'  // Adjust the branch name if needed
-                    echo "Terraform code has been cloned to: ${TERRAFORM_DIR}"
+
+                    // Clone the repository from GitHub
+                    try {
+                        git url: "${GITHUB_REPO}", branch: 'main'  // Adjust the branch name if needed
+                        echo "Git repository cloned successfully."
+                    } catch (Exception e) {
+                        echo "Git clone failed: ${e.getMessage()}"
+                        error "Failed to clone Git repository"
+                    }
+                    
+                    // Verify the directory structure
+                    echo "Listing files in the workspace:"
+                    sh "ls -la ${WORKSPACE}"
+                    echo "Listing files in the cloned directory:"
+                    sh "ls -la ${TERRAFORM_DIR}"
                 }
             }
         }
@@ -54,10 +66,15 @@ pipeline {
                 script {
                     // Initialize Terraform working directory
                     echo "Running terraform init..."
-                    sh """
-                    cd ${TERRAFORM_DIR}
-                    terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
-                    """
+                    try {
+                        sh """
+                        cd ${TERRAFORM_DIR}
+                        terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
+                        """
+                    } catch (Exception e) {
+                        echo "Terraform init failed: ${e.getMessage()}"
+                        error "Failed to initialize Terraform"
+                    }
                 }
             }
         }
@@ -67,10 +84,15 @@ pipeline {
                 script {
                     // Run Terraform plan
                     echo "Running terraform plan..."
-                    sh """
-                    cd ${TERRAFORM_DIR}
-                    terraform plan -out=tfplan
-                    """
+                    try {
+                        sh """
+                        cd ${TERRAFORM_DIR}
+                        terraform plan -out=tfplan
+                        """
+                    } catch (Exception e) {
+                        echo "Terraform plan failed: ${e.getMessage()}"
+                        error "Failed to create Terraform plan"
+                    }
                 }
             }
         }
@@ -80,10 +102,15 @@ pipeline {
                 script {
                     // Apply Terraform changes
                     echo "Running terraform apply..."
-                    sh """
-                    cd ${TERRAFORM_DIR}
-                    terraform apply -auto-approve tfplan
-                    """
+                    try {
+                        sh """
+                        cd ${TERRAFORM_DIR}
+                        terraform apply -auto-approve tfplan
+                        """
+                    } catch (Exception e) {
+                        echo "Terraform apply failed: ${e.getMessage()}"
+                        error "Failed to apply Terraform changes"
+                    }
                 }
             }
         }
