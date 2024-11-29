@@ -2,31 +2,37 @@ pipeline {
     agent any
 
     environment {
-        // Set Terraform version
         TF_VERSION = "1.5.3"  // Set the desired Terraform version
         AWS_REGION = "us-east-1"  // Specify your region (change as needed)
+        TERRAFORM_DIR = "/path/to/your/terraform/code"  // Path to your Terraform configuration files
     }
 
     stages {
-        stage('Checkout Code') {
-            steps {
-                // Checkout code from GitHub
-                checkout scm
-            }
-        }
-
-        stage('Install Terraform') {
+        stage('Prepare Environment') {
             steps {
                 script {
-                    // Install Terraform (if not already installed)
-                    sh '''
-                    if ! command -v terraform &>/dev/null; then
-                        echo "Terraform not found. Installing..."
+                    // Check if terraform is already installed
+                    if (!sh(script: "command -v terraform", returnStatus: true)) {
+                        echo "Terraform is not installed. Installing Terraform version ${TF_VERSION}..."
+
+                        // Download the specified version of Terraform
+                        sh '''
                         curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
-                        unzip terraform_${TF_VERSION}_linux_amd64.zip
+
+                        # If terraform binary exists, remove it first
+                        if [ -f /usr/local/bin/terraform ]; then
+                            sudo rm /usr/local/bin/terraform
+                        fi
+
+                        # Unzip the downloaded file and overwrite any existing binary
+                        unzip -o terraform_${TF_VERSION}_linux_amd64.zip
+
+                        # Move the terraform binary to /usr/local/bin/ if needed
                         sudo mv terraform /usr/local/bin/
-                    fi
-                    '''
+                        '''
+                    } else {
+                        echo "Terraform is already installed."
+                    }
                 }
             }
         }
@@ -35,9 +41,10 @@ pipeline {
             steps {
                 script {
                     // Initialize Terraform working directory
-                    sh '''
+                    sh """
+                    cd ${TERRAFORM_DIR}
                     terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
-                    '''
+                    """
                 }
             }
         }
@@ -46,9 +53,10 @@ pipeline {
             steps {
                 script {
                     // Run Terraform plan
-                    sh '''
+                    sh """
+                    cd ${TERRAFORM_DIR}
                     terraform plan -out=tfplan
-                    '''
+                    """
                 }
             }
         }
@@ -57,9 +65,10 @@ pipeline {
             steps {
                 script {
                     // Apply Terraform changes
-                    sh '''
+                    sh """
+                    cd ${TERRAFORM_DIR}
                     terraform apply -auto-approve tfplan
-                    '''
+                    """
                 }
             }
         }
@@ -68,9 +77,10 @@ pipeline {
             steps {
                 script {
                     // Optionally run verification steps or output Terraform state
-                    sh '''
+                    sh """
+                    cd ${TERRAFORM_DIR}
                     terraform show
-                    '''
+                    """
                 }
             }
         }
