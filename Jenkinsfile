@@ -55,10 +55,14 @@ pipeline {
 
         stage('Terraform Init') {
             steps {
-                withCredentials([aws(credentialsId: "${AWS_CREDENTIALS_ID}", region: "${AWS_REGION}")]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "${AWS_CREDENTIALS_ID}"
+                ]]) {
                     script {
                         echo "Initializing Terraform..."
                         sh '''
+                        export AWS_REGION="${AWS_REGION}"
                         cd ${WORKSPACE}
                         terraform init \
                             -backend-config="bucket=my-terraform-state-bucket" \
@@ -72,10 +76,14 @@ pipeline {
 
         stage('Terraform Plan') {
             steps {
-                withCredentials([aws(credentialsId: "${AWS_CREDENTIALS_ID}", region: "${AWS_REGION}")]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "${AWS_CREDENTIALS_ID}"
+                ]]) {
                     script {
                         echo "Creating Terraform plan..."
                         sh '''
+                        export AWS_REGION="${AWS_REGION}"
                         cd ${WORKSPACE}
                         terraform plan -out=tfplan
                         '''
@@ -86,10 +94,14 @@ pipeline {
 
         stage('Terraform Apply') {
             steps {
-                withCredentials([aws(credentialsId: "${AWS_CREDENTIALS_ID}", region: "${AWS_REGION}")]) {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "${AWS_CREDENTIALS_ID}"
+                ]]) {
                     script {
                         echo "Applying Terraform changes..."
                         sh '''
+                        export AWS_REGION="${AWS_REGION}"
                         cd ${WORKSPACE}
                         terraform apply -auto-approve tfplan
                         '''
