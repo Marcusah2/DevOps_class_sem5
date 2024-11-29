@@ -5,7 +5,6 @@ pipeline {
         TF_VERSION = "1.5.3"  // Set the desired Terraform version
         AWS_REGION = "us-east-1"  // Specify your region (change as needed)
         GITHUB_REPO = "https://github.com/Marcusah2/DevOps_class_sem5.git"  // GitHub repository URL
-        TERRAFORM_DIR = "${WORKSPACE}/DevOps_class_sem5"  // Path where the GitHub repository will be cloned
     }
 
     stages {
@@ -14,7 +13,7 @@ pipeline {
                 script {
                     echo "Cloning Terraform code from GitHub repository..."
 
-                    // Clone the repository from GitHub
+                    // Clone the repository from GitHub into the workspace
                     try {
                         git url: "${GITHUB_REPO}", branch: 'main'  // Adjust the branch name if needed
                         echo "Git repository cloned successfully."
@@ -22,12 +21,10 @@ pipeline {
                         echo "Git clone failed: ${e.getMessage()}"
                         error "Failed to clone Git repository"
                     }
-                    
+
                     // Verify the directory structure
                     echo "Listing files in the workspace:"
                     sh "ls -la ${WORKSPACE}"
-                    echo "Listing files in the cloned directory:"
-                    sh "ls -la ${TERRAFORM_DIR}"
                 }
             }
         }
@@ -67,8 +64,9 @@ pipeline {
                     // Initialize Terraform working directory
                     echo "Running terraform init..."
                     try {
+                        // Ensure to 'cd' into the directory after git checkout
                         sh """
-                        cd ${TERRAFORM_DIR}
+                        cd ${WORKSPACE}  // This is where the GitHub repo will be cloned
                         terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
                         """
                     } catch (Exception e) {
@@ -86,7 +84,7 @@ pipeline {
                     echo "Running terraform plan..."
                     try {
                         sh """
-                        cd ${TERRAFORM_DIR}
+                        cd ${WORKSPACE}  // This is where the GitHub repo will be cloned
                         terraform plan -out=tfplan
                         """
                     } catch (Exception e) {
@@ -104,7 +102,7 @@ pipeline {
                     echo "Running terraform apply..."
                     try {
                         sh """
-                        cd ${TERRAFORM_DIR}
+                        cd ${WORKSPACE}  // This is where the GitHub repo will be cloned
                         terraform apply -auto-approve tfplan
                         """
                     } catch (Exception e) {
@@ -121,7 +119,7 @@ pipeline {
                     // Optionally run verification steps or output Terraform state
                     echo "Verifying Terraform state..."
                     sh """
-                    cd ${TERRAFORM_DIR}
+                    cd ${WORKSPACE}  // This is where the GitHub repo will be cloned
                     terraform show
                     """
                 }
