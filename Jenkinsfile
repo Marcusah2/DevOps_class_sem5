@@ -33,28 +33,28 @@ pipeline {
             steps {
                 script {
                     // Check if terraform is already installed
-                    if (!sh(script: "command -v terraform", returnStatus: true)) {
+                    def terraformExists = sh(script: "command -v terraform", returnStatus: true) == 0
+
+                    if (!terraformExists) {
                         echo "Terraform is not installed. Installing Terraform version ${TF_VERSION}..."
 
                         // Download the specified version of Terraform
                         sh '''
                         curl -LO https://releases.hashicorp.com/terraform/${TF_VERSION}/terraform_${TF_VERSION}_linux_amd64.zip
 
-                        # If terraform binary exists, remove it first
-                        if [ -f /usr/local/bin/terraform ]; then
-                            sudo rm /usr/local/bin/terraform
-                        fi
+                        # Unzip the downloaded file
+                        unzip terraform_${TF_VERSION}_linux_amd64.zip
 
-                        # Unzip the downloaded file and overwrite any existing binary
-                        unzip -o terraform_${TF_VERSION}_linux_amd64.zip
-
-                        # Move the terraform binary to /usr/local/bin/ if needed
+                        # Move the terraform binary to /usr/local/bin/
                         sudo mv terraform /usr/local/bin/
+
+                        # Ensure terraform is accessible by adding it to the PATH (for current session)
+                        export PATH=$PATH:/usr/local/bin
                         '''
 
-                        // Ensure terraform is available on the system path
-                        echo "Adding Terraform to PATH..."
-                        sh 'export PATH=$PATH:/usr/local/bin'
+                        // Verify terraform installation
+                        echo "Verifying Terraform installation..."
+                        sh "terraform --version"
                     } else {
                         echo "Terraform is already installed."
                     }
@@ -66,13 +66,9 @@ pipeline {
             steps {
                 script {
                     // Ensure the terraform binary is accessible
-                    echo "Verifying Terraform installation..."
-                    sh "terraform --version" // This will confirm terraform is available in the PATH
-
-                    // Initialize Terraform working directory
                     echo "Running terraform init..."
                     try {
-                        // Ensure to 'cd' into the directory after git checkout
+                        // Initialize Terraform working directory
                         sh """
                         cd ${WORKSPACE}  // This is where the GitHub repo will be cloned
                         terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
