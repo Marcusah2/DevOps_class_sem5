@@ -4,10 +4,22 @@ pipeline {
     environment {
         TF_VERSION = "1.5.3"  // Set the desired Terraform version
         AWS_REGION = "us-east-1"  // Specify your region (change as needed)
-        TERRAFORM_DIR = "/path/to/your/terraform/code"  // Path to your Terraform configuration files
+        TERRAFORM_DIR = "${WORKSPACE}/DevOps_class_sem5"  // Path where the GitHub repository will be cloned
+        GITHUB_REPO = "https://github.com/Marcusah2/DevOps_class_sem5.git"  // GitHub repository URL
     }
 
     stages {
+        stage('Checkout Terraform Code from GitHub') {
+            steps {
+                script {
+                    // Clone the Terraform code from GitHub repository
+                    echo "Cloning Terraform code from GitHub repository..."
+                    git url: "${GITHUB_REPO}", branch: 'main'  // Adjust the branch name if needed
+                    echo "Terraform code has been cloned to: ${TERRAFORM_DIR}"
+                }
+            }
+        }
+
         stage('Prepare Environment') {
             steps {
                 script {
@@ -41,6 +53,7 @@ pipeline {
             steps {
                 script {
                     // Initialize Terraform working directory
+                    echo "Running terraform init..."
                     sh """
                     cd ${TERRAFORM_DIR}
                     terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
@@ -53,6 +66,7 @@ pipeline {
             steps {
                 script {
                     // Run Terraform plan
+                    echo "Running terraform plan..."
                     sh """
                     cd ${TERRAFORM_DIR}
                     terraform plan -out=tfplan
@@ -65,6 +79,7 @@ pipeline {
             steps {
                 script {
                     // Apply Terraform changes
+                    echo "Running terraform apply..."
                     sh """
                     cd ${TERRAFORM_DIR}
                     terraform apply -auto-approve tfplan
@@ -77,6 +92,7 @@ pipeline {
             steps {
                 script {
                     // Optionally run verification steps or output Terraform state
+                    echo "Verifying Terraform state..."
                     sh """
                     cd ${TERRAFORM_DIR}
                     terraform show
