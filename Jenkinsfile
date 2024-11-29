@@ -28,7 +28,7 @@ pipeline {
                     
                     // Verify that the Terraform files are in the correct directory
                     echo "Listing files in the directory containing Terraform configurations:"
-                    sh "ls -la ${WORKSPACE}/DevOps_class_sem5"  // Adjust the path if necessary
+                    sh "ls -la ${WORKSPACE}"  // Adjust the path if necessary
                 }
             }
         }
@@ -74,7 +74,7 @@ pipeline {
                     try {
                         // Initialize Terraform working directory
                         sh """
-                        cd ${WORKSPACE}/DevOps_class_sem5  // Adjust the path to where the Terraform files are
+                        cd ${WORKSPACE}  // Adjust the path to where the Terraform files are
                         terraform init -backend-config="region=${AWS_REGION}" -backend-config="bucket=my-terraform-state"
                         """
                     } catch (Exception e) {
@@ -92,7 +92,7 @@ pipeline {
                     echo "Running terraform plan..."
                     try {
                         sh """
-                        cd ${WORKSPACE}/DevOps_class_sem5  // Adjust the path to where the Terraform files are
+                        cd ${WORKSPACE}  // Adjust the path to where the Terraform files are
                         terraform plan -out=tfplan
                         """
                     } catch (Exception e) {
@@ -110,7 +110,7 @@ pipeline {
                     echo "Running terraform apply..."
                     try {
                         sh """
-                        cd ${WORKSPACE}/DevOps_class_sem5  // Adjust the path to where the Terraform files are
+                        cd ${WORKSPACE}  // Adjust the path to where the Terraform files are
                         terraform apply -auto-approve tfplan
                         """
                     } catch (Exception e) {
@@ -127,7 +127,7 @@ pipeline {
                     // Optionally run verification steps or output Terraform state
                     echo "Verifying Terraform state..."
                     sh """
-                    cd ${WORKSPACE}/DevOps_class_sem5  // Adjust the path to where the Terraform files are
+                    cd ${WORKSPACE}  // Adjust the path to where the Terraform files are
                     terraform show
                     """
                 }
